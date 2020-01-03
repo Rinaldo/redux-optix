@@ -1,0 +1,82 @@
+{
+  "name": "redux-optix",
+  "version": "0.1.0",
+  "description": "Generate a set of Redux action creators and a reducer with a simple, lens-inspired syntax",
+  "author": "Robert Rinaldo",
+  "license": "MIT",
+  "repository": "github:Rinaldo/redux-optix",
+  "bugs": "https://github.com/Rinaldo/redux-optix/issues",
+  "keywords": [
+    "redux",
+    "actions",
+    "reducer",
+    "fsa",
+    "lens",
+    "validator",
+    "validation"
+  ],
+  "main": "dist/redux-optix.cjs.js",
+  "module": "dist/redux-optix.esm.js",
+  "unpkg": "dist/redux-optix.umd.js",
+  "files": [
+    "/dist",
+    "/src"
+  ],
+  "scripts": {
+    "build": " npm run clean && rollup -c",
+    "clean": "rimraf dist",
+    "lint": "eslint {src,test}/**/*.js",
+    "prettier-check": "prettier --check {src,test}/**/*.js",
+    "prettier-write": "prettier --write {src,test}/**/*.js",
+    "test": "jest",
+    "test-watch": "jest --watch",
+    "full-test": "npm run lint && npm run prettier-check && npm run test",
+    "coverage": "jest --collectCoverage"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.7",
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-proposal-object-rest-spread": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "babel-eslint": "^10.0.3",
+    "babel-jest": "^24.9.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.9.0",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^3.1.0",
+    "jest": "^24.9.0",
+    "partial.lenses": "^14.17.0",
+    "prettier": "1.19.1",
+    "pretty-quick": "^2.0.1",
+    "ramda": "^0.26.1",
+    "redux": "^4.0.5",
+    "redux-thunk": "^2.3.0",
+    "rimraf": "^3.0.0",
+    "rollup": "^1.27.14",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-terser": "^5.1.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged",
+      "pre-push": "npm run full-test"
+    }
+  },
+  "jest": {
+    "verbose": true,
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "collectCoverageFrom": [
+      "src/*.js",
+      "!src/index.js"
+    ],
+    "coverageReporters": [
+      "html",
+      "text"
+    ]
+  },
+  "sideEffects": false
+}
