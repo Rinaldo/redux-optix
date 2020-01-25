@@ -12,6 +12,7 @@
     "reducer",
     "fsa",
     "lens",
+    "state machine",
     "validator",
     "validation"
   ],

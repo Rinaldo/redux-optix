@@ -20,6 +20,7 @@ const initialState = {
     data: null,
   },
   counter: 0,
+  loadingState: 0,
 }
 
 const { actions, types, reducer } = createOptix({
@@ -52,11 +53,19 @@ const { actions, types, reducer } = createOptix({
     handler: data => request => ({ ...request, data, status: "DONE" }),
   },
   fetchSuccess2: {
-    batch: [{ path: ["request", "data"] }, { path: ["request", "status"], always: "DONE" }],
+    batch: [
+      { path: ["request", "data"] },
+      { path: ["request", "status"], always: "DONE" },
+      { path: "loadingState", handler: () => R.dec },
+    ],
   },
   fetchSuccess3: {
     path: "request",
-    batch: [{ suffix: "data" }, { suffix: "status", always: "DONE" }],
+    batch: [
+      { suffix: "data" },
+      { suffix: "status", always: "DONE" },
+      { path: "loadingState", handler: () => R.dec },
+    ],
   },
   incrementUpToTen: {
     path: "counter",
@@ -267,6 +276,7 @@ describe("Integration examples", () => {
     })
     expect(newState).toEqual({
       ...initialState,
+      loadingState: initialState.loadingState - 1,
       request: {
         ...initialState.request,
         status: "DONE",
@@ -290,6 +300,7 @@ describe("Integration examples", () => {
     })
     expect(newState).toEqual({
       ...initialState,
+      loadingState: initialState.loadingState - 1,
       request: {
         ...initialState.request,
         status: "DONE",
