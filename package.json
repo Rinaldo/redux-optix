@@ -1,6 +1,6 @@
 {
   "name": "redux-optix",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate a set of Redux action creators and a reducer with a simple, lens-inspired syntax",
   "author": "Robert Rinaldo",
   "license": "MIT",
