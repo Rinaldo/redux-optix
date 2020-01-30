@@ -4,7 +4,7 @@
 
 **Generate a set of Redux action creators and a reducer with a simple, lens-inspired syntax**
 
-Redux Optix generates a set of action creators and a reducer from a set of action definitions. It sets intelligent defaults and works well with libraries like [Ramda](https://ramdajs.com/) to reduce boilerplate and make even complex actions simple to define. Redux Optix centralizes action logic instead of spreading it across an action creator and one or more reducers. This makes the full effects of actions more clear and sidesteps issues with [sharing data between slice reducers](https://redux.js.org/recipes/structuring-reducers/beyond-combinereducers).
+Redux Optix generates a set of action creators and a reducer from a set of declarative definitions. It sets intelligent defaults and works well with libraries like [Ramda](https://ramdajs.com/) to reduce boilerplate and make even complex actions simple to define. Redux Optix centralizes action logic instead of spreading it across an action creator and one or more reducers. This makes the full effects of actions more clear and sidesteps issues with [sharing data between slice reducers](https://redux.js.org/recipes/structuring-reducers/beyond-combinereducers).
 
 ## Refactoring with Redux Optix: Fewer lines, more clarity
 
@@ -42,8 +42,7 @@ const actionMap = {
   editTodo: {
     path: "todos",
     payloadCreator: (id, text) => ({ id, text }),
-    handler: ({ id, text }) =>
-      R.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)),
+    handler: ({ id, text }) => R.map(todo => (todo.id === id ? { ...todo, text } : todo)),
   },
   toggleTodo: {
     path: "todos",
@@ -148,69 +147,65 @@ setUserName: {
 }
 ```
 
-Redux Optix sets both the payloadCreator and handler properties to the identity function by default, so specifying just a [path](#path) will create a setter function.
+Specifying just a [path](#path) will create a setter function due to the defaults on other properties.
 
-#### Adding a handler
+#### Defining a handler
 
 ```javascript
 deleteTodo: {
-  path: 'todos',
+  path: "todos",
   handler: id => R.filter(todo => todo.id !== id)
 }
 ```
 
-The [handler](#handler) property serves as the case reducer for the action. It is a higher-order function that is called with the contents of the action, then with a slice of state, and should return a new value for that slice. Redux Optix works well with the curried, data-last functions of libraries like [Ramda](https://ramdajs.com/). The vanilla js version of this example would be `id => todos => todos.filter(todo => todo.id !== id)`
+The [handler](#handler) property serves as the case reducer for the action. It is a higher-order function that is called with the the action's payload (and meta if applicable), then with a slice of state, and should return a new value for that slice. Redux Optix works well with the curried, data-last functions of libraries like [Ramda](https://ramdajs.com/). The vanilla js version of this example would be `id => todos => todos.filter(todo => todo.id !== id)`
 
-#### A two argument action creator
+#### Setting the arity of the default action creator
 
 ```javascript
 editTodo: {
   arity: 2,
-  path: 'todos',
+  path: "todos",
   handler: (text, id) => R.map(todo => todo.id === id ? { ...todo, text } : todo)
 }
 ```
 
-Specifying an [arity](#arity) of 2 will generate an action creator that takes two arguments and passes them to the handler function.
+The default action creator takes one argument and sets it as the action's payload. Specifying an [arity](#arity) of 2 will generate an action creator that takes two arguments and sets them as the action's payload and meta properties.
 
-#### A more complex action creator
+#### Defining a customized action creator
 
 ```javascript
 addTodo: {
-  path: 'todos',
-  payloadCreator: (...words) => words.join(' '),
-  metaCreator: () => Math.floor(Math.random() * 1000),
+  path: "todos",
+  payloadCreator: (...words) => words.join(" "),
+  metaCreator: (...words) => Math.floor(Math.random() * words.length),
   handler: (text, id) => R.append({ text, id, completed: false })
 }
 ```
 
-More complex action creators taking any number of arguments can be defined by using the [payloadCreator](#payloadCreator) and [metaCreator](#metaCreator) properties. Both properties are called with the arguments of the action creator.
+More complex action creators taking any number of arguments can be defined by using the [payloadCreator](#payloadCreator) and [metaCreator](#metaCreator) properties. Since both [payloadCreator](#payloadCreator) and [metaCreator](#metaCreator) are specified in this example, [handler](#handler) will be called with 2 arguments.
 
-#### Always
+#### Setting state to a constant
 
 ```javascript
 fetchRequest: {
-  path: 'request.status',
-  always: 'LOADING'
+  path: "request.status",
+  always: "LOADING"
 }
 ```
 
-Shorthand for [always](#always) setting the same value into state.
+Shorthand for [always](#always) setting a value into state.
 
-#### Updating multiple pieces of state with spread
+#### Updating multiple pieces with a shorter path
 
 ```javascript
 fetchSuccess1: {
-  path: 'request',
-  handler: data => requestState => ({
-    ...requestState,
-    status: 'DONE',
-    data
-  })
+  path: "request",
+  handler: data => R.mergeLeft({ data, status: "DONE" })
 }
 ```
 
-The spread operator can be used to update multiple pieces of state.
+A shorter path gives the handler access to more of the state. The above handler updates both `request.data` and `request.status`.
 
 #### Updating multiple pieces of state with batch
 
@@ -224,28 +219,28 @@ fetchSuccess2: {
 }
 ```
 
-A [batch](#batch) operation can be used to update disparate pieces of state.
+A [batch](#batch) reducer operation can be used to update multiple disparate pieces of state.
 
 #### Sharing properties between batches
 
 ```javascript
 fetchSuccess3: {
-  path: 'request',
+  path: "request",
   batch: [
-    { suffix: 'status', always: 'DONE' },
-    { suffix: 'data' },
-    { path: 'loadingState', handler: () => R.dec },
+    { suffix: "status", always: "DONE" },
+    { suffix: "data" },
+    { path: "loadingState", handler: () => R.dec },
   ]
 }
 ```
 
-Any properties specified at the top level will be merged with the batch properties. In this case the [path](#path) 'request' will be shared between the first two items and the value of the [suffix](#suffix) property will be appended.
+Any properties specified at the top level will be merged with the batch properties. In this case the [path](#path) `request` will be shared between the first two items and the value of the [suffix](#suffix) property will be appended.
 
 #### validating actions
 
 ```javascript
 incrementUpToTen: {
-  path: 'counter',
+  path: "counter",
   arity: 0,
   handler: R.inc,
   validate: ({ slice }) => slice < 10
@@ -266,7 +261,7 @@ The one export of Redux Optix. It takes an `actionMap` argument and an optional 
 
 ### the `actionMap` argument
 
-Each key is the name of an action creator and each value is an action definition that may contain the following properties:
+Each key will name an action creator and each value is an action/reducer definition that may contain the following properties:
 
 #### `handler`
 
@@ -274,19 +269,19 @@ Each key is the name of an action creator and each value is an action definition
 `payload => stateSlice => newStateSlice`  
 `(payload, meta) => stateSlice => newStateSlice`
 
-Updates the piece of state at the path specified. It is first called with arguments (see `arity`) from the action, then with the piece of state, and should return an update to that piece of state. The default value is `payload => () => payload`.
+Updates the piece of state at the path specified. It is first called with the contents of the action (see `arity`), then with the piece of state, and should return an update to that piece of state. The default value is `payload => () => payload`.
 
 #### `always`
 
 `any`
 
-Shorthand for setting state to a constant value. If both `handler` and `always` are specified, `handler` takes precedence. `always` is ignored if set to `undefined`.
+Shorthand for setting state to a constant value. `always` is ignored if set to `undefined` or if `handler` is specified.
 
 #### `arity`
 
 `0 | 1 | 2`
 
-Determines how many arguments the `handler` function is initially called with. If neither `payloadCreator` nor `metaCreator` are specified, it also sets the arity of the default action creator. If `metaCreator` is specified, the default value is 2. If `always` is specified and `handler` is not, it is 0. In all other cases the default value is 1.
+Determines how many arguments the `handler` function is initially called with. Also sets the arity of the default action creator if neither `payloadCreator` nor `metaCreator` are specified. If `arity` is 1, the handler is called with the action's payload. If it is 2, the handler is called with both the action's payload and meta properties. The default value is 1 except it's 2 when `metaCreator` is specified and it's 0 when `always` is specified and `handler` is not.
 
 #### `payloadCreator`
 
@@ -304,13 +299,13 @@ Similar to `payloadCreator`. Takes any number of arguments (the same arguments a
 
 `string | Array<string>`
 
-Specifies a path into the state object. The value at that path will be passed to the `handler` function. `path` can be an array of keys or a string containing one or more keys, i.e. `'user.todos[0].text'`. If `path` is empty or undefined, the entire state will be passed to the `handler` function.
+Specifies a path into the state object. The value at that path will be passed to the `handler` function. `path` can be an array of keys or a string containing one or more keys, i.e. `"user.todos[0].text"`. If `path` is empty or undefined, the entire state will be passed to the `handler` function.
 
 #### `suffix`
 
 `string | Array<string>`
 
-Specifies a path that will be appended to the resolved value of `path`.
+Specifies an additional path that will be appended to the value of `path`.
 
 #### `batch`
 
